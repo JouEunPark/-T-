@@ -1,0 +1,29 @@
+import uuid
+import os
+from fastapi import UploadFile, File, HTTPException
+from typing import List
+from fastapi import FastAPI
+from ultralytics import YOLO
+
+app = FastAPI()
+
+# YOLO 모델 로드
+model = YOLO('./food_yolo.pt')  # Pretrained 모델 경로 설정
+
+
+@app.post("/food")
+async def upload_photo(file: UploadFile):
+    UPLOAD_DIR = "./photo"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    # 업로드 파일 저장
+    content = await file.read()
+    filename = f"{str(uuid.uuid4())}.jpg"
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    with open(file_path, "wb") as fp:
+        fp.write(content)
+
+    results = model(file_path)
+    
+    return {"predictions": "ok"}
+
